@@ -177,7 +177,7 @@ namespace vptree
         }
 
         nodes.emplace_back();
-        VPTreeNode& node = &nodes.back();
+        VPTreeNode& node = nodes.back();
         node.parent = parent;
 
         {
@@ -199,7 +199,7 @@ namespace vptree
 
             //Compute distances
             for(std::size_t i = 0; i+1 < size; ++i)
-                distances[i] = dist_func(node->pivot, begin[i]);
+                distances[i] = dist_func(node.pivot, begin[i]);
 
             partition_result_t pr = partition_vertices_by_median_distance(begin, end-1, distances);
 
@@ -376,10 +376,10 @@ namespace vptree
     template <typename T>
     const T* VPTree<T>::get_element_from_vertex(vertex_t vertex) const
     {
-        if(v >= elements.size())
+        if(vertex >= elements.size())
             throw VPTreeError("VPTree", "get_element_from_vertex", "Vertex id is out of range");
 
-        return elements[v];
+        return elements[vertex];
     }
 
 
