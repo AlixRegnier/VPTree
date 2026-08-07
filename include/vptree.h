@@ -1,8 +1,8 @@
 #ifndef VPTREE_H
 #define VPTREE_H
 
-#include <algorithm> //Sort algorithms
-#include <functional> //Function prototyping
+#include <algorithm>
+#include <functional>
 #include <vector>
 #include <stdexcept>
 #include <random>
@@ -199,7 +199,7 @@ namespace vptree
 
             //Compute distances
             for(std::size_t i = 0; i+1 < size; ++i)
-                distances[i] = dist_func(node.pivot, begin[i]);
+                distances[i] = dist_func(*elements[node.pivot], *elements[begin[i]]);
 
             partition_result_t pr = partition_vertices_by_median_distance(begin, end-1, distances);
 
