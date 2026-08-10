@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "vptree"
-version = "0.1.0"
+version = "1.0.0"
 
 [tool.scikit-build]
 cmake.build-type = "Release"
