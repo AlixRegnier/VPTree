@@ -15,7 +15,7 @@ This library is a standalone header-only that requires at least ``C++17``.
 It also has a Python interface, wrapped with [nanobind](https://github.com/wjakob/nanobind).
 Python package be installed using:
 ```bash
-python3 -m pip install vptree
+python3 -m pip install git+https://github.com/AlixRegnier/VPTree.git
 ```
 ## Usage
 
@@ -25,7 +25,7 @@ We give examples in Python and in C++ in ``./examples``.
 
 VPTree internal operations relies on a type call ``vertex_t`` (alias ``std::uint64_t``).  
 
-The $N$ elements you give when constructing a VPTree are mapped using an incremental ID starting:  
+The $N$ elements you give when constructing a VPTree are mapped using an incremental ID:  
 First element ID is $0$, second element ID is $1$, ..., last element ID is $N-1$.
 
 
@@ -41,7 +41,7 @@ void set_vertex_as_unvisited(vertex_t vertex);
 const T* get_element_from_vertex(vertex_t vertex) const;
 ```
 
-*Note that their is no mapping [T] --> [vertex], which avoid using a heavy map*.
+*Note: their is no mapping [T] --> [vertex], which avoid using a heavy map*.
 
 ### Queries
 
