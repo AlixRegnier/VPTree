@@ -27,6 +27,14 @@ namespace vptree
     {
 
     private:
+        // Internal struct used to return median partitioning result
+        struct partition_result_t
+        {
+            std::size_t split_index;
+            double median;
+        };
+
+        // Internal struct used to represent a node
         struct VPTreeNode
         {
             VPTreeNode* parent = nullptr;
@@ -34,7 +42,10 @@ namespace vptree
             VPTreeNode* right = nullptr;
             vertex_t pivot;
 
-            double threshold; //Median of pivot distances from other vertices
+            //Median of pivot distances from other vertices
+            double threshold; 
+
+            //Whether the node and all its subtrees can be skipped
             bool skip = false;
 
             VPTreeNode() : VPTreeNode(nullptr, nullptr, nullptr, vertex_t{0}, 0.0, false) {}
@@ -45,19 +56,40 @@ namespace vptree
                 : parent(parent), left(left), right(right), pivot(pivot), threshold(threshold), skip(skip) {}
         };
 
-        //Internal nodes
+        //Nodes
         std::vector<VPTreeNode> nodes;
 
         //Redirection vector
         std::vector<const T*> elements;
 
-        //Swap-and-pop utility
+        //Swap-and-pop vector tracking remaining vertices positions
         std::vector<std::size_t> remaining_vertices_position;
+
+        //Swap-and-pop vector tracking remaining vertices
         std::vector<vertex_t> remaining_vertices;
+
+        //Bitmap vector telling if a vertex is set as "visited"
         std::vector<bool> already_added_vertices;
 
+        //Distance function used to compare two elements
         DistanceFunction<T> dist_func;
 
+        /// @brief Recursive function for constructing the metric tree
+        /// @param begin Vertex ID start iterator
+        /// @param end Vertex ID end iterator
+        /// @param parent Parent node address
+        /// @return Initialized node address
+        virtual VPTreeNode* init_node(
+            std::vector<vertex_t>::iterator begin,
+            std::vector<vertex_t>::iterator end,
+            VPTreeNode* parent = nullptr
+        );
+
+        /// @brief Store in nn_t<T> reference, the nearest unvisited neighbor to a given query and the distance
+        /// @param node Root of search
+        /// @param query Element which we want to find the nearest-neighbor
+        /// @param result Output containing both the nearest unvisited neighbor of 'query' and their distance
+        /// @param epsilon Error factor for early search termination
         virtual void get_nearest_unvisited_neighbor(
             const VPTreeNode& node,
             const T& query,
@@ -65,27 +97,27 @@ namespace vptree
             double epsilon = 0.0
         ) const;
 
-        virtual VPTreeNode* init_node(
-            std::vector<vertex_t>::iterator begin,
-            std::vector<vertex_t>::iterator end,
-            VPTreeNode* parent = nullptr
-        );
-
-        struct partition_result_t
-        {
-            std::size_t split_index;
-            double median;
-        };
-
         //From distances median, it partitions vertices according to median
         //Left part is for elements lesser or equal to median.
         //Returns struct { size_t split_index, double median }
+
+        /// @brief Partition given range in two parts according to median (<=, >)
+        /// @param vertices_begin Vertex ID start iterator (must not contain pivot)
+        /// @param vertices_end Vertex ID end iterator (must not contain pivot)
+        /// @param distances Distances computed between pivot and all vertices ID in range
+        /// @return Struct containing median and the second partition starting index
         static partition_result_t partition_vertices_by_median_distance(
-            const std::vector<vertex_t>::iterator vertices_begin,
-            const std::vector<vertex_t>::iterator vertices_end,
+            std::vector<vertex_t>::iterator vertices_begin,
+            std::vector<vertex_t>::iterator vertices_end,
             const std::vector<double>& distances
         );
     public:
+        /// @brief Construct a VPTree using 'dist_func' on given input elements 
+        /// @tparam It Iterator over elements that can be converted as T
+        /// @tparam -
+        /// @param begin Start iterator
+        /// @param end End iterator
+        /// @param dist_func Distance function for computing the distance between two T references
         template<typename It, 
              typename = std::enable_if_t<std::is_convertible_v<
                  typename std::iterator_traits<It>::value_type, T>>>
@@ -96,15 +128,48 @@ namespace vptree
         VPTree(VPTree&&) = default;
         virtual ~VPTree() = default;
 
-        virtual void set_vertex_as_visited(vertex_t vertex);
-        virtual void set_vertex_as_unvisited(vertex_t vertex);
+        /// @brief Tell if there are no more remaining elements
+        /// @return true if there are no more remaining elements, false otherwise
+        virtual bool empty() const;
 
+        /// @brief Return the element associated to given vertex
+        /// @param vertex Unsigned integer in [0; N[
+        /// @return A pointer to const element T associated with input vertex
         virtual const T* get_element_from_vertex(vertex_t vertex) const;
 
+        /// @brief Return the nearest unvisited neighbor to a given query and the distance to the query
+        /// @param query Element which we want to find the nearest-neighbor
+        /// @param epsilon Error factor for early search termination
+        /// @return A struct containing both the nearest unvisited neighbor found and the distance to the query
         virtual nn_t<T> get_nearest_unvisited_neighbor(const T& query, double epsilon = 0.0) const;
+
+        /// @brief Return a random unvisited element
+        /// @return A pointer to const element T
         virtual const T* get_random_unvisited_element() const;
+
+        /// @brief Return a random unvisited vertex
+        /// @return A vertex ID
         virtual vertex_t get_random_unvisited_vertex() const;
+
+        /// @brief Return a vector of remaining elements
+        /// @return A vector of pointers, pointing to const T elements
         virtual std::vector<const T*> get_remaining_elements_ptr() const;
+
+        /// @brief Set given vertex as a possible candidate for a query
+        /// @param vertex The vertex ID
+        virtual void set_vertex_as_unvisited(vertex_t vertex);
+
+        /// @brief Hide given vertex from search space
+        /// @param vertex The vertex ID
+        virtual void set_vertex_as_visited(vertex_t vertex);
+
+        /// @brief Return the number of remaining elements
+        /// @return The number of remaining elements
+        virtual std::size_t remaining_size() const;
+
+        /// @brief Return the number of elements in the VPTree
+        /// @return The number of elements in the VPTree
+        virtual std::size_t size() const;
     };
 
     class RNG
@@ -130,7 +195,7 @@ namespace vptree
 
     template <typename T>
     template <typename It, typename>
-    VPTree<T>::VPTree(It begin, It end, const DistanceFunction<T>& dist_func)
+    inline VPTree<T>::VPTree(It begin, It end, const DistanceFunction<T>& dist_func)
     {
         const std::size_t size = static_cast<std::size_t>(std::distance(begin, end));
 
@@ -163,7 +228,111 @@ namespace vptree
     }
 
     template <typename T>
-    typename VPTree<T>::VPTreeNode* VPTree<T>::init_node(std::vector<vertex_t>::iterator begin, std::vector<vertex_t>::iterator end, VPTreeNode* parent)
+    inline bool VPTree<T>::empty() const
+    {
+        return remaining_vertices.empty();
+    }
+
+    template <typename T>
+    inline const T* VPTree<T>::get_element_from_vertex(vertex_t vertex) const
+    {
+        if(vertex >= elements.size())
+            throw VPTreeError("VPTree", "get_element_from_vertex", "Vertex id is out of range");
+
+        return elements[vertex];
+    }
+
+    template <typename T>
+    inline const T* VPTree<T>::get_random_unvisited_element() const
+    {
+        if(empty())
+            throw VPTreeError("VPTree", "get_random_unvisited_element", "No remaining elements");
+
+        return elements[get_random_unvisited_vertex()];
+    }
+
+    template <typename T>
+    inline vertex_t VPTree<T>::get_random_unvisited_vertex() const
+    {
+        if(empty())
+            throw VPTreeError("VPTree", "get_random_unvisited_element", "No remaining vertices");
+
+        std::size_t idx = static_cast<std::size_t>(RNG::rand_u64(0, remaining_vertices.size()));
+        return remaining_vertices[idx];
+    }
+
+    template <typename T>
+    inline std::vector<const T*> VPTree<T>::get_remaining_elements_ptr() const
+    {
+        std::vector<const T*> remaining_elements_ptr;
+        remaining_elements_ptr.resize(remaining_vertices.size());
+
+        for(std::size_t i = 0; i < remaining_vertices.size(); ++i)
+            remaining_elements_ptr[i] = elements[remaining_vertices[i]];
+
+        return remaining_elements_ptr;
+    }
+
+    //public definition
+    template <typename T>
+    inline nn_t<T> VPTree<T>::get_nearest_unvisited_neighbor(const T& query, double epsilon) const
+    {
+        if(empty())
+            throw VPTreeError("VPTree", "get_nearest_unvisited_neighbor", "No remaining neighbors");
+
+        if(epsilon < 0.0)
+            throw VPTreeError("VPTree", "get_nearest_unvisited_neighbor", "epsilon must be null or positive");
+
+        nn_t<T> result = {
+            elements[remaining_vertices[0]],
+            remaining_vertices[0],
+            dist_func(query, *elements[remaining_vertices[0]])
+        };
+
+        get_nearest_unvisited_neighbor(nodes[0], query, result, epsilon);
+
+        return result;
+    }
+
+    //private definition
+    template <typename T>
+    inline void VPTree<T>::get_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, nn_t<T>& result, double epsilon) const
+    {
+        double distance = dist_func(*elements[node.pivot], query);
+
+        if(!already_added_vertices[node.pivot] && distance < result.distance)
+        {
+            result.element_ptr = elements[node.pivot];
+            result.vertex = node.pivot;
+            result.distance = distance;
+        }
+
+        double relaxed_tau = result.distance / (1.0 + epsilon);
+
+        if(distance < node.threshold)
+        {
+            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
+                get_nearest_unvisited_neighbor(*node.left, query, result, epsilon);
+
+            relaxed_tau = result.distance / (1.0 + epsilon);
+
+            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
+                get_nearest_unvisited_neighbor(*node.right, query, result, epsilon);
+        }
+        else
+        {
+            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
+                get_nearest_unvisited_neighbor(*node.right, query, result, epsilon);
+
+            relaxed_tau = result.distance / (1.0 + epsilon);
+
+            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
+                get_nearest_unvisited_neighbor(*node.left, query, result, epsilon);
+        }
+    }
+
+    template <typename T>
+    inline typename VPTree<T>::VPTreeNode* VPTree<T>::init_node(std::vector<vertex_t>::iterator begin, std::vector<vertex_t>::iterator end, VPTreeNode* parent)
     {
         if(begin >= end)
             return nullptr;
@@ -258,64 +427,44 @@ namespace vptree
         return { split_index, median };
     }
 
-    template<typename T>
-    nn_t<T> VPTree<T>::get_nearest_unvisited_neighbor(const T& query, double epsilon) const
+
+    template <typename T>
+    inline std::size_t VPTree<T>::remaining_size() const
     {
-        if(remaining_vertices.empty())
-            throw VPTreeError("VPTree", "get_nearest_unvisited_neighbor", "No remaining neighbors");
-
-        if(epsilon < 0.0)
-            throw VPTreeError("VPTree", "get_nearest_unvisited_neighbor", "epsilon must be null or positive");
-
-        nn_t<T> result = {
-            elements[remaining_vertices[0]],
-            remaining_vertices[0],
-            dist_func(query, *elements[remaining_vertices[0]])
-        };
-
-        get_nearest_unvisited_neighbor(nodes[0], query, result, epsilon);
-
-        return result;
+        return remaining_vertices.size();
     }
 
     template <typename T>
-    void VPTree<T>::get_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, nn_t<T>& result, double epsilon) const
+    inline void VPTree<T>::set_vertex_as_unvisited(vertex_t vertex)
     {
-        double distance = dist_func(*elements[node.pivot], query);
+        if(vertex >= nodes.size())
+            throw VPTreeError("VPTree", "set_vertex_as_unvisited", "Vertex id is out of range");
 
-        if(!already_added_vertices[node.pivot] && distance < result.distance)
+        if(!already_added_vertices[vertex])
+            return;
+
+        //Set node as unvisited
+        already_added_vertices[vertex] = false;
+
+        //Update remaining nodes (swap-and-pop)
+        remaining_vertices.push_back(vertex);
+        remaining_vertices_position[vertex] = remaining_vertices.size() - 1;
+
+        VPTreeNode* node = &nodes[vertex];
+        while(node != nullptr)
         {
-            result.element_ptr = elements[node.pivot];
-            result.vertex = node.pivot;
-            result.distance = distance;
-        }
+            //Stop property propagation if not masked
+            if(!node->skip)
+                return;
 
-        double relaxed_tau = result.distance / (1.0 + epsilon);
+            node->skip = false;
 
-        if(distance < node.threshold)
-        {
-            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
-                get_nearest_unvisited_neighbor(*node.left, query, result, epsilon);
-
-            relaxed_tau = result.distance / (1.0 + epsilon);
-
-            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
-                get_nearest_unvisited_neighbor(*node.right, query, result, epsilon);
-        }
-        else
-        {
-            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
-                get_nearest_unvisited_neighbor(*node.right, query, result, epsilon);
-
-            relaxed_tau = result.distance / (1.0 + epsilon);
-
-            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
-                get_nearest_unvisited_neighbor(*node.left, query, result, epsilon);
+            node = node->parent;
         }
     }
 
     template <typename T>
-    void VPTree<T>::set_vertex_as_visited(vertex_t vertex)
+    inline void VPTree<T>::set_vertex_as_visited(vertex_t vertex)
     {
         if(vertex >= nodes.size())
             throw VPTreeError("VPTree", "set_vertex_as_visited", "Vertex id is out of range");
@@ -345,73 +494,9 @@ namespace vptree
     }
 
     template <typename T>
-    void VPTree<T>::set_vertex_as_unvisited(vertex_t vertex)
+    inline std::size_t VPTree<T>::size() const
     {
-        if(vertex >= nodes.size())
-            throw VPTreeError("VPTree", "set_vertex_as_unvisited", "Vertex id is out of range");
-
-        if(!already_added_vertices[vertex])
-            return;
-
-        //Set node as unvisited
-        already_added_vertices[vertex] = false;
-
-        //Update remaining nodes (swap-and-pop)
-        remaining_vertices.push_back(vertex);
-        remaining_vertices_position[vertex] = remaining_vertices.size() - 1;
-
-        VPTreeNode* node = &nodes[vertex];
-        while(node != nullptr)
-        {
-            //Stop property propagation if not masked
-            if(!node->skip)
-                return;
-
-            node->skip = false;
-
-            node = node->parent;
-        }
-    }
-
-    template <typename T>
-    const T* VPTree<T>::get_element_from_vertex(vertex_t vertex) const
-    {
-        if(vertex >= elements.size())
-            throw VPTreeError("VPTree", "get_element_from_vertex", "Vertex id is out of range");
-
-        return elements[vertex];
-    }
-
-
-    template <typename T>
-    vertex_t VPTree<T>::get_random_unvisited_vertex() const
-    {
-        if(remaining_vertices.empty())
-            throw VPTreeError("VPTree", "get_random_unvisited_element", "No remaining vertices");
-
-        std::size_t idx = static_cast<std::size_t>(RNG::rand_u64(0, remaining_vertices.size()));
-        return remaining_vertices[idx];
-    }
-
-    template <typename T>
-    const T* VPTree<T>::get_random_unvisited_element() const
-    {
-        if(remaining_vertices.empty())
-            throw VPTreeError("VPTree", "get_random_unvisited_element", "No remaining elements");
-
-        return elements[get_random_unvisited_vertex()];
-    }
-
-    template <typename T>
-    std::vector<const T*> VPTree<T>::get_remaining_elements_ptr() const
-    {
-        std::vector<const T*> remaining_elements_ptr;
-        remaining_elements_ptr.resize(remaining_vertices.size());
-
-        for(std::size_t i = 0; i < remaining_vertices.size(); ++i)
-            remaining_elements_ptr[i] = elements[remaining_vertices[i]];
-
-        return remaining_elements_ptr;
+        return nodes.size();
     }
 
     // RNG implementation

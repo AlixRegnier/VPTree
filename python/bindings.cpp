@@ -25,7 +25,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "../include/vptree.h" // adjust to the actual header path for the code above
+#include "../include/vptree.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -97,6 +97,21 @@ namespace
             return tree.get_random_unvisited_vertex();
         }
 
+        bool empty() const
+        {
+            return tree.empty();
+        }
+
+        std::size_t size() const
+        {
+            return tree.size();
+        }
+
+        std::size_t remaining_size() const
+        {
+            return tree.remaining_size();
+        }
+
         std::vector<nb::object> get_remaining_elements_ptr() const
         {
             std::vector<const nb::object*> ptrs = tree.get_remaining_elements_ptr();
@@ -115,7 +130,7 @@ namespace
         std::vector<nb::object> storage;
         vptree::VPTree<nb::object> tree;
     };
-} // namespace
+}
 
 NB_MODULE(vptree, m)
 {
@@ -126,7 +141,7 @@ NB_MODULE(vptree, m)
     To reproduce, pass "true" to "nb::set_leak_warnings()" and in a Python script:
     >>>
     from vptree import VPTree
-    tree = VPTree(1, lambda a,b: 0.0)
+    tree = VPTree(elements, lambda a,b: 0.0)
     <<<
 
     If VPTree is instancied in another scope than the global scope, it do not produce any warning from nanobind
@@ -185,7 +200,19 @@ NB_MODULE(vptree, m)
 
         .def("get_remaining_elements_ptr",
              &PyVPTree::get_remaining_elements_ptr,
-             "Return the list of all currently unvisited elements");
+             "Return the list of all currently unvisited elements")
+
+        .def("empty",
+             &PyVPTree::empty,
+             "Tell whether there are remaining elements or not")
+
+        .def("size",
+             &PyVPTree::size,
+             "Return the number of indexed elements")
+
+        .def("remaining_size",
+             &PyVPTree::remaining_size,
+             "Return the number of remaining elements");
 
     // --- RNG -----------------------------------------------------------
     // RNG's constructor is deleted and every member is static, so we bind
@@ -204,5 +231,5 @@ NB_MODULE(vptree, m)
         .def_static("get_seed", &vptree::RNG::get_seed,
                     "Return the current RNG seed")
         .def_static("get_random_seed", &vptree::RNG::get_random_seed,
-                    "Return a freshly generated random seed");
+                    "Return a new random number that can be used as a seed");
 }
