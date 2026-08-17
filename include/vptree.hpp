@@ -283,10 +283,12 @@ namespace vptree
         if(epsilon < 0.0)
             throw VPTreeError("VPTree", "get_nearest_unvisited_neighbor", "epsilon must be null or positive");
 
+        vertex_t v = get_random_unvisited_vertex();
+
         nn_t<T> result = {
-            elements[remaining_vertices[0]],
-            remaining_vertices[0],
-            dist_func(query, *elements[remaining_vertices[0]])
+            elements[v],
+            v,
+            dist_func(query, *elements[v])
         };
 
         get_nearest_unvisited_neighbor(nodes[0], query, result, epsilon);
@@ -416,7 +418,7 @@ namespace vptree
 
         auto splitPoint = std::partition(
             pairs.begin(), pairs.end(),
-            [median](const auto& p) { return p.first <= median; }
+            [median](const auto& p) { return p.first < median; }
         );
         std::size_t split_index = static_cast<std::size_t>(std::distance(pairs.begin(), splitPoint));
 
