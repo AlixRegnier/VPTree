@@ -296,7 +296,7 @@ namespace vptree
 
     //private definition
     template <typename T>
-    inline void VPTree<T>::get_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, nn_t<T>& result, double epsilon) const
+    void VPTree<T>::get_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, nn_t<T>& result, double epsilon) const
     {
         double distance = dist_func(*elements[node.pivot], query);
 
