@@ -1,4 +1,4 @@
-#include <vptree.h>
+#include <vptree.hpp>
 #include <vector>
 
 struct Point
@@ -30,7 +30,7 @@ void find_nearest_neighbors(const std::vector<Point> points, const std::vector<P
         //nn.vertex : nearest unvisited neighbor of given vertex
         //nn.distance : distance between found nearest neighbor and given vertex
         //Complexity: O(log(n)) to O(n). See README about epsilon
-        nn_t nn = metric_tree.get_nearest_unvisited_neighbor(queries[i], epsilon);
+        nn_t<Point> nn = metric_tree.get_nearest_unvisited_neighbor(queries[i], epsilon);
 
         //Process 
         //nn.element_ptr...
