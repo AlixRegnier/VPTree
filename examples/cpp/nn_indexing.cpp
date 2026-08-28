@@ -40,7 +40,7 @@ void find_nearest_neighbors(const std::vector<Point> points, const std::vector<P
         //nn.distance...
 
         //Complexity: O(k.log(n)) to O(kn). See README about epsilon
-        std::vector<nn_t<Point>> knn = metric_tree.get_k_nearest_unvisited_neighbor(queries[i], k, epsilon);
+        std::vector<nn_t<Point>> knn = metric_tree.get_k_nearest_unvisited_neighbors(queries[i], k, epsilon);
         //Process k subelements (ascending sort by distance then by vertex ID)
         //...
     }

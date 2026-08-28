@@ -215,14 +215,14 @@ namespace vptree
         /// @return A vector containing k random unvisited element const pointers
         virtual std::vector<const T*> get_k_random_unvisited_elements(std::size_t k) const;
 
-        /// @brief Return the k nearest unvisited neighbor to a given query and the distance to the query
+        /// @brief Return the k nearest unvisited neighbors to a given query and the distance to the query
         /// @param query Element which we want to find the k nearest unvisited neighbors
         /// @param epsilon Error factor for early search termination
-        /// @return A struct containing both the k nearest unvisited neighbor found and the distance to the query
-        virtual std::vector<nn_t<T, dist_t>> get_k_nearest_unvisited_neighbor(const T& query, std::size_t k, dist_t epsilon = dist_t{0}) const;
+        /// @return A vector of structs containing both the k nearest unvisited neighbors found and the distance to the query
+        virtual std::vector<nn_t<T, dist_t>> get_k_nearest_unvisited_neighbors(const T& query, std::size_t k, dist_t epsilon = dist_t{0}) const;
 
         /// @brief Return of k random unvisited vertices
-        /// @param k The size of the vector
+        /// @param k The number of random unvisited elements to get
         /// @return A vector containing k random unvisited vertices
         virtual std::vector<vertex_t> get_k_random_unvisited_vertices(std::size_t k) const;
 
@@ -313,7 +313,7 @@ namespace vptree
         init_node(remaining_vertices.begin(), remaining_vertices.end());
 
         //Track new permutation of elements
-        for(std::size_t i = 0, i < size; ++i)
+        for(std::size_t i = 0; i < size; ++i)
             remaining_vertices_position[remaining_vertices[i]] = i;
     }
 
@@ -334,7 +334,7 @@ namespace vptree
 
     //public definition
     template <typename T, typename dist_t>
-    inline std::vector<nn_t<T, dist_t>> VPTree<T, dist_t>::get_k_nearest_unvisited_neighbor(const T& query, std::size_t k, dist_t epsilon) const
+    inline std::vector<nn_t<T, dist_t>> VPTree<T, dist_t>::get_k_nearest_unvisited_neighbors(const T& query, std::size_t k, dist_t epsilon) const
     {
         if(remaining_size() < k)
             throw VPTreeError("VPTree", "get_k_nearest_unvisited_neighbor", "No enough remaining neighbors");
@@ -410,7 +410,7 @@ namespace vptree
         std::vector<const T*> remaining_elements;
         remaining_elements.reserve(k);
 
-        for(vertex_t v : get_k_random_unvisited_vertices())
+        for(vertex_t v : get_k_random_unvisited_vertices(k))
             remaining_elements.push_back(elements[v]);
 
         return remaining_elements;
