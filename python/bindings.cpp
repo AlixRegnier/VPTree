@@ -57,6 +57,11 @@ namespace
         {
         }
 
+        void set_all_vertices_as_unvisited()
+        {
+            tree.set_all_vertices_as_unvisited();
+        }
+
         void set_vertex_as_visited(vptree::vertex_t vertex)
         {
             tree.set_vertex_as_visited(vertex);
@@ -86,10 +91,50 @@ namespace
             };
         }
 
+        std::vector<PyNN> get_k_nearest_unvisited_neighbors(const nb::object& query,
+                                              std::size_t k,
+                                              double epsilon = 0.0) const
+        {
+            std::vector<vptree::nn_t<nb::object>> answer =
+                tree.get_k_nearest_unvisited_neighbors(query, k, epsilon);
+
+            std::vector<PyNN> result;
+            result.resize(answer.size());
+
+            for(std::size_t i = 0; i < result.size(); ++i)
+            {
+                result[i] = PyNN {
+                    answer[i].element_ptr ? *answer[i].element_ptr : nb::object(nb::none()),
+                    answer[i].vertex,
+                    answer[i].distance
+                };
+            }
+
+            return result;
+        }
+
+
         nb::object get_random_unvisited_element() const
         {
             const nb::object* ptr = tree.get_random_unvisited_element();
             return ptr ? *ptr : nb::object(nb::none());
+        }
+
+        std::vector<nb::object> get_k_random_unvisited_elements(std::size_t k) const
+        {
+            std::vector<const nb::object*> answer = tree.get_k_random_unvisited_elements(k);
+            std::vector<nb::object> result;
+            result.reserve(answer.size());
+
+            for(std::size_t i = 0; i < answer.size(); ++i)
+                result.push_back(answer[i] ? *answer[i] : nb::object(nb::none()));
+
+            return result;
+        }
+
+        std::vector<vptree::vertex_t> get_k_random_unvisited_vertices(std::size_t k) const
+        {
+            return tree.get_k_random_unvisited_vertices(k);
         }
 
         vptree::vertex_t get_random_unvisited_vertex() const
@@ -112,9 +157,9 @@ namespace
             return tree.remaining_size();
         }
 
-        std::vector<nb::object> get_remaining_elements_ptr() const
+        std::vector<nb::object> get_remaining_elements() const
         {
-            std::vector<const nb::object*> ptrs = tree.get_remaining_elements_ptr();
+            std::vector<const nb::object*> ptrs = tree.get_remaining_elements();
 
             std::vector<nb::object> result;
             result.reserve(ptrs.size());
@@ -172,6 +217,10 @@ NB_MODULE(vptree, m)
              "Build a vantage-point tree from a list of Python objects and a "
              "distance function dist_func(a, b) -> float")
 
+        .def("set_all_vertices_as_unvisited", &PyVPTree::set_all_vertices_as_unvisited,
+             "Mark all vertices as unvisited (eligible again for "
+             "nearest-neighbor queries)")
+        
         .def("set_vertex_as_visited", &PyVPTree::set_vertex_as_visited,
              "vertex"_a,
              "Mark the given vertex as visited (excluded from future "
@@ -190,6 +239,21 @@ NB_MODULE(vptree, m)
              "query"_a, "epsilon"_a = 0.0,
              "Return the nearest unvisited neighbor to query")
 
+        .def("get_k_nearest_unvisited_neighbors",
+             &PyVPTree::get_k_nearest_unvisited_neighbors,
+             "query"_a, "k"_a, "epsilon"_a = 0.0,
+             "Return the k nearest unvisited neighbors to query")
+
+        .def("get_k_random_unvisited_elements",
+             &PyVPTree::get_k_random_unvisited_elements,
+             "k"_a,
+             "Return the k random unvisited elements to query")
+
+        .def("get_k_random_unvisited_vertices",
+             &PyVPTree::get_k_random_unvisited_vertices,
+             "k"_a,
+             "Return the k random unvisited vertices to query")
+
         .def("get_random_unvisited_element",
              &PyVPTree::get_random_unvisited_element,
              "Return a random element among the unvisited ones")
@@ -198,8 +262,8 @@ NB_MODULE(vptree, m)
              &PyVPTree::get_random_unvisited_vertex,
              "Return a random vertex id among the unvisited ones")
 
-        .def("get_remaining_elements_ptr",
-             &PyVPTree::get_remaining_elements_ptr,
+        .def("get_remaining_elements",
+             &PyVPTree::get_remaining_elements,
              "Return the list of all currently unvisited elements")
 
         .def("empty",

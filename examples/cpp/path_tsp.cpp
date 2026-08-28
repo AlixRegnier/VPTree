@@ -1,5 +1,6 @@
-#include <vptree.h>
+#include <vptree.hpp>
 #include <vector>
+#include <cmath>
 
 struct Point
 {
@@ -10,6 +11,8 @@ using namespace vptree;
 
 std::vector<Point> nearest_neighbor_heuristic(const std::vector<Point>& points)
 {
+    const std::size_t n = points.size();
+
     //Prepare datastructure storing result
     std::vector<Point> tsp_path;
     tsp_path.reserve(n);
@@ -19,11 +22,11 @@ std::vector<Point> nearest_neighbor_heuristic(const std::vector<Point>& points)
         double x2 = (a.x - b.x) * (a.x - b.x);
         double y2 = (a.y - b.y) * (a.y - b.y);
 
-        return x2 + y2;
+        return sqrt(x2 + y2);
     };
 
     //Construction complexity: O(nlog(n))
-    VPTree<Point> metric_tree(points.begin(), points.end(), square_dist);
+    VPTree<Point, double> metric_tree(points.begin(), points.end(), square_dist);
 
     //Query parameter >= 0.0
     double epsilon = 0.0;
@@ -38,7 +41,7 @@ std::vector<Point> nearest_neighbor_heuristic(const std::vector<Point>& points)
         //nn.vertex (vertex_t): nearest unvisited neighbor of given vertex
         //nn.distance (double): distance between found nearest neighbor and given vertex
         //Complexity: O(log(n)) to O(n). See README about epsilon
-        nn_t<Point> nn = metric_tree.get_nearest_unvisited_neighbor(*tail, epsilon);
+        nn_t<Point, double> nn = metric_tree.get_nearest_unvisited_neighbor(*tail, epsilon);
 
         //Remove found neighbor from search space
         //Complexity: O(1)
