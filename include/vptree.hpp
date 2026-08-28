@@ -244,6 +244,9 @@ namespace vptree
         /// @return A vector of pointers, pointing to const T elements
         virtual std::vector<const T*> get_remaining_elements() const;
 
+        /// @brief Set all vertices as a possible candidates for a query
+        virtual void set_all_vertices_as_unvisited();
+        
         /// @brief Set given vertex as a possible candidate for a query
         /// @param vertex The vertex ID
         virtual void set_vertex_as_unvisited(vertex_t vertex);
@@ -261,18 +264,16 @@ namespace vptree
         virtual std::size_t size() const;
     };
 
-    class RNG
+    struct RNG
     {
-        private:
-            static std::mt19937 gen;
-            static std::uint64_t seed;
-            RNG() = delete;
-        public:
-            static std::uint64_t rand_u64();
-            static std::uint64_t rand_u64(std::uint64_t a, std::uint64_t b);
-            static void set_seed(std::uint64_t seed);
-            static std::uint64_t get_seed();
-            static std::uint64_t get_random_seed();
+        RNG() = delete;
+        static std::uint64_t seed;
+        static std::mt19937 gen;
+        static std::uint64_t get_random_seed();
+        static std::uint64_t get_seed();
+        static std::uint64_t rand_u64();
+        static std::uint64_t rand_u64(std::uint64_t a, std::uint64_t b);
+        static void set_seed(std::uint64_t seed);
     };
 
     class VPTreeError : public std::runtime_error
@@ -312,7 +313,7 @@ namespace vptree
         //After this call: remaining_vertices will contain partitioned points
         init_node(remaining_vertices.begin(), remaining_vertices.end());
 
-        //Track new permutation of elements
+        //Track new position of elements
         for(std::size_t i = 0; i < size; ++i)
             remaining_vertices_position[remaining_vertices[i]] = i;
     }
@@ -629,6 +630,26 @@ namespace vptree
     inline std::size_t VPTree<T, dist_t>::remaining_size() const
     {
         return remaining_vertices.size();
+    }
+
+    template <typename T, typename dist_t>
+    inline void VPTree<T, dist_t>::set_all_vertices_as_unvisited()
+    {
+        const std::size_t n = size();
+
+        for(std::size_t i = 0; i < n; i++)
+        {
+            nodes[i].skip = false;
+            already_added_vertices[i] = false;
+            remaining_vertices[i] = vertex_t{i};
+        }
+
+        //Remaining vertices need to be randomly permuted to ensure proper random initial solutions
+        std::shuffle(remaining_vertices.begin(), remaining_vertices.end(), RNG::gen);
+
+        //Track new position of elements
+        for(std::size_t i = 0; i < n; i++)
+            remaining_vertices_position[remaining_vertices[i]] = i;
     }
 
     template <typename T, typename dist_t>

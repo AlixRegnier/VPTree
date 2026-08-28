@@ -57,6 +57,11 @@ namespace
         {
         }
 
+        void set_all_vertices_as_unvisited()
+        {
+            tree.set_all_vertices_as_unvisited();
+        }
+
         void set_vertex_as_visited(vptree::vertex_t vertex)
         {
             tree.set_vertex_as_visited(vertex);
@@ -212,6 +217,10 @@ NB_MODULE(vptree, m)
              "Build a vantage-point tree from a list of Python objects and a "
              "distance function dist_func(a, b) -> float")
 
+        .def("set_all_vertices_as_unvisited", &PyVPTree::set_all_vertices_as_unvisited,
+             "Mark all vertices as unvisited (eligible again for "
+             "nearest-neighbor queries)")
+        
         .def("set_vertex_as_visited", &PyVPTree::set_vertex_as_visited,
              "vertex"_a,
              "Mark the given vertex as visited (excluded from future "
