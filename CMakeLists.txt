@@ -30,6 +30,10 @@ if(VPTREE_BUILD_PYTHON)
         python/bindings.cpp
     )
 
+    set_target_properties(vptree_python PROPERTIES
+        OUTPUT_NAME vptree
+    )
+
     target_link_libraries(vptree_python
         PRIVATE vptree
     )

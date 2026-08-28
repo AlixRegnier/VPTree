@@ -1,5 +1,6 @@
 from vptree import VPTree
 from typing import Iterable, List
+from math import sqrt, pow
 
 class Point:
     def __init__(self, x, y):
@@ -11,7 +12,7 @@ def nearest_neighbor_heuristic(points : Iterable[Point]) -> List[Point]:
     tsp_path = [None]*len(points)
 
     #Define a function to compute a distance between two elements
-    square_dist = lambda a, b: (a.x-b.x)**2 + (a.y-b.y)**2
+    square_dist = lambda a, b: sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2))
 
     #Construction complexity: O(nlog(n))
     metric_tree = VPTree(points, square_dist)

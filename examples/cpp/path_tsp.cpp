@@ -1,5 +1,6 @@
 #include <vptree.hpp>
 #include <vector>
+#include <cmath>
 
 struct Point
 {
@@ -21,7 +22,7 @@ std::vector<Point> nearest_neighbor_heuristic(const std::vector<Point>& points)
         double x2 = (a.x - b.x) * (a.x - b.x);
         double y2 = (a.y - b.y) * (a.y - b.y);
 
-        return x2 + y2;
+        return sqrt(x2 + y2);
     };
 
     //Construction complexity: O(nlog(n))

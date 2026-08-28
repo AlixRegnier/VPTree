@@ -86,6 +86,29 @@ namespace
             };
         }
 
+        std::vector<PyNN> get_k_nearest_unvisited_neighbor(const nb::object& query,
+                                              std::size_t k,
+                                              double epsilon = 0.0) const
+        {
+            std::vector<vptree::nn_t<nb::object>> answer =
+                tree.get_k_nearest_unvisited_neighbor(query, k, epsilon);
+
+            std::vector<PyNN> result;
+            result.resize(answer.size());
+
+            for(std::size_t i = 0; i < result.size(); ++i)
+            {
+                result[i] = PyNN {
+                    answer[i].element_ptr ? *answer[i].element_ptr : nb::object(nb::none()),
+                    answer[i].vertex,
+                    answer[i].distance
+                };
+            }
+
+            return result;
+        }
+
+
         nb::object get_random_unvisited_element() const
         {
             const nb::object* ptr = tree.get_random_unvisited_element();
@@ -189,6 +212,11 @@ NB_MODULE(vptree, m)
              &PyVPTree::get_nearest_unvisited_neighbor,
              "query"_a, "epsilon"_a = 0.0,
              "Return the nearest unvisited neighbor to query")
+
+        .def("get_k_nearest_unvisited_neighbor",
+             &PyVPTree::get_k_nearest_unvisited_neighbor,
+             "query"_a, "k"_a, "epsilon"_a = 0.0,
+             "Return the k nearest unvisited neighbors to query")
 
         .def("get_random_unvisited_element",
              &PyVPTree::get_random_unvisited_element,
