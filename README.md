@@ -3,7 +3,7 @@
 ## When using this library
 
 Your distance function **must** satisfies mathematical distance properties:
-|<!-- -->|<!-- -->|
+|||
 :--|:--
 $d(x, y) \ge 0$ | non-negativity
 $d(x, y) = 0 \Leftrightarrow x = y$| identity of indiscernibles
@@ -84,7 +84,7 @@ const T* get_element_from_vertex(vertex_t vertex) const;
 
 Queries are solved using a modified VPTree branch-and-bound algorithm. It introduces dynamic tree masking and approximated results.
 
-``epsilon`` ($\epsilon$) can take any value in interval [0.0; +$\infty$]. By setting $\epsilon=0.0$, you will get exact nearest neighbor. Otherwise, you will get an approximate nearest neighbor. With $\tau$ being the true best distance, bound relaxation formula is:
+``epsilon`` ($\epsilon$) can take any value in interval $[0.0, +\infty[$. By setting $\epsilon=0.0$, you will get exact nearest neighbor. Otherwise, you will get an approximate nearest neighbor. With $\tau$ being the true best distance, bound relaxation formula is:
 $$\tilde\tau = \tau\cdot(1+\epsilon)$$
 
 A result is represented by a template struct ``nn_t<T, dist_t>`` which contains following elements:
