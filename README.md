@@ -78,7 +78,7 @@ void set_all_vertices_as_unvisited();
 const T* get_element_from_vertex(vertex_t vertex) const;
 ```
 
-*Note: their is no mapping [T] --> [vertex], which avoid using a heavy map*.
+*Note: there is no mapping &lt;T&gt;* &#x2B62; *&lt;vertex&gt;, which avoid using a heavy map*.
 
 ### Queries
 
@@ -139,5 +139,5 @@ std::vector<const T*> get_remaining_elements() const;
 
 ## References
 
-[1] Yianilos, Peter N. "Data structures and algorithms for nearest neighbor search in general metric spaces." Soda. Vol. 93. No. 194. 1993.
+[1] Yianilos, Peter N. "Data structures and algorithms for nearest neighbor search in general metric spaces." Soda. Vol. 93. No. 194. 1993.  
 [2] preprint soon
