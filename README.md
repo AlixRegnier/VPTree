@@ -21,7 +21,7 @@ Example of valid distances: Euclidean (L2), Manhattan (L1), Jaccard, Hamming, ..
 * Nearest-neighbor **without replacement**  
 (perfect for  solving nearest-neighbor heuristic)
 
-## Requirements
+## Installation
 
 This library is a standalone header-only that requires at least ``C++17``.
 
