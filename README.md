@@ -2,10 +2,22 @@
 
 ## When using this library
 
-* 1-NN queries
-* $k$-NN queries
+Your distance function **must** satisfies mathematical distance properties:
+|<!-- -->|<!-- -->|
+:--|:--
+$d(x, y) \ge 0$ | non-negativity
+$d(x, y) = 0 \Leftrightarrow x = y$| identity of indiscernibles
+$d(x, y) = d(y, x)$ | symmetric
+$d(x, z) \le d(x, y) + d(y, z)$ | triangle inequality
+    
+Example of valid distances: Euclidean (L2), Manhattan (L1), Jaccard, Hamming, ...  
+*Note: Cosine do not satisfies triangle inequality*
+
+**Whenever you need:**
 * Nearest-Neighbor Search (NNS) with ``epsilon = 0.0``
 * Approximate Nearest-Neighbor Search (ANNS) with ``epsilon > 0.0``
+* 1-NN queries
+* $k$-NN queries
 * Nearest-neighbor **without replacement**  
 (perfect for  solving nearest-neighbor heuristic)
 
@@ -21,6 +33,27 @@ python3 -m pip install git+https://github.com/AlixRegnier/VPTree.git
 ## Usage
 
 We give examples in Python and in C++ in ``./examples``.
+
+### Initialization
+
+```c++
+#include <vptree.hpp>
+
+int main()
+{
+    std::vector<YourObject> elements = { ... };
+
+    //Distance function must satisfies mathematical 
+    //properties given in first section
+    auto dist_func = [](const YourObject& a, const YourObject& b) -> double {
+        //return distance between a and b
+    };
+
+    //Default type for distance is double
+    //Only one constructor that takes two iterators and a distance function
+    vptree::VPTree<YourObject, double> metric_tree(elements.begin(), elements.end(), dist_func);
+}
+```
 
 ### Communicating with library
 
@@ -94,6 +127,7 @@ std::vector<const T*> get_remaining_elements() const;
 * Uses STL vectors as underlying structure to contain the binary metric tree.
 * $k$ methods are implemented using datastructures adapted to $k\le 15$.
 * Memory leak free: all dynamic allocations rely on ``std::vector``.
+* Distance function is stored once in a ``std::function``.
 * Uses no maps and no sets.
 * Indexed input elements are stored as pointers.
 * Elements can be excluded from search space in $\mathcal{O}(\log n)$.
@@ -105,5 +139,5 @@ std::vector<const T*> get_remaining_elements() const;
 
 ## References
 
-[1] ref vptree  
-[2] ref relaxed vptree
+[1] Yianilos, Peter N. "Data structures and algorithms for nearest neighbor search in general metric spaces." Soda. Vol. 93. No. 194. 1993.
+[2] preprint soon
