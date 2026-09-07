@@ -747,7 +747,7 @@ namespace vptree
         return std::random_device()();
     }
 
-    constexpr inline std::uint64_t RNG::seed = std::uint64_t{42};
+    inline std::uint64_t RNG::seed = std::uint64_t{42};
     inline std::mt19937 RNG::gen = std::mt19937(RNG::seed); // Standard mersenne_twister_engine seeded with default random_device
 };
 
