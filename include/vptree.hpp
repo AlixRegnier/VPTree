@@ -365,7 +365,7 @@ namespace vptree
 
     //private definition
     template <typename T, typename dist_t>
-    void VPTree<T, dist_t>::get_k_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, TopKNeighbors<T, dist_t>& top_k, dist_t epsilon) const
+    inline void VPTree<T, dist_t>::get_k_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, TopKNeighbors<T, dist_t>& top_k, dist_t epsilon) const
     {
         dist_t distance = dist_func(*elements[node.pivot], query);
 
@@ -462,7 +462,7 @@ namespace vptree
 
     //private definition
     template <typename T, typename dist_t>
-    void VPTree<T, dist_t>::get_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, nn_t<T, dist_t>& result, dist_t epsilon) const
+    inline void VPTree<T, dist_t>::get_nearest_unvisited_neighbor(const VPTreeNode& node, const T& query, nn_t<T, dist_t>& result, dist_t epsilon) const
     {
         dist_t distance = dist_func(*elements[node.pivot], query);
 
@@ -581,7 +581,7 @@ namespace vptree
     }
 
     template <typename T, typename dist_t>
-    typename VPTree<T, dist_t>::partition_result_t VPTree<T, dist_t>::partition_vertices_by_median_distance(std::vector<vertex_t>::iterator vertices_begin, std::vector<vertex_t>::iterator vertices_end, const std::vector<dist_t>& distances)
+    inline typename VPTree<T, dist_t>::partition_result_t VPTree<T, dist_t>::partition_vertices_by_median_distance(std::vector<vertex_t>::iterator vertices_begin, std::vector<vertex_t>::iterator vertices_end, const std::vector<dist_t>& distances)
     {
         const std::size_t size = static_cast<std::size_t>(std::distance(vertices_begin, vertices_end));
 
@@ -718,12 +718,12 @@ namespace vptree
     }
 
     // RNG implementation
-    std::uint64_t RNG::rand_u64()
+    inline std::uint64_t RNG::rand_u64()
     {
         return gen();
     }
 
-    std::uint64_t RNG::rand_u64(std::uint64_t a, std::uint64_t b) //Generate an unsigned integer in [a ; b[
+    inline std::uint64_t RNG::rand_u64(std::uint64_t a, std::uint64_t b) //Generate an unsigned integer in [a ; b[
     {
         if(a >= b)
             throw VPTreeError("RNG", "rand_u64", "got unexpected interval");
@@ -731,24 +731,24 @@ namespace vptree
         return (rand_u64() % (b-a)) + a;
     }
 
-    std::uint64_t RNG::get_seed()
+    inline std::uint64_t RNG::get_seed()
     {
         return seed;
     }
 
-    void RNG::set_seed(std::uint64_t new_seed)
+    inline void RNG::set_seed(std::uint64_t new_seed)
     {
         seed = new_seed;
         gen.seed(seed);
     }
 
-    std::uint64_t RNG::get_random_seed()
+    inline std::uint64_t RNG::get_random_seed()
     {
         return std::random_device()();
     }
 
-    std::uint64_t RNG::seed = std::uint64_t{42};
-    std::mt19937 RNG::gen = std::mt19937(RNG::seed); // Standard mersenne_twister_engine seeded with default random_device
+    constexpr inline std::uint64_t RNG::seed = std::uint64_t{42};
+    inline std::mt19937 RNG::gen = std::mt19937(RNG::seed); // Standard mersenne_twister_engine seeded with default random_device
 };
 
 #endif
