@@ -382,22 +382,22 @@ namespace vptree
 
         if(distance < node.threshold)
         {
-            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
+            if(node.left != nullptr /*&& !node.left->skip*/ && (distance - relaxed_tau) <= node.threshold)
                 get_k_nearest_unvisited_neighbor(*node.left, query, top_k, epsilon);
 
             relaxed_tau = top_k.farthest_distance() / (dist_t{1} + epsilon);
 
-            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
+            if(node.right != nullptr /*&& !node.right->skip*/ && (distance + relaxed_tau) >= node.threshold)
                 get_k_nearest_unvisited_neighbor(*node.right, query, top_k, epsilon);
         }
         else
         {
-            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
+            if(node.right != nullptr /*&& !node.right->skip*/ && (distance + relaxed_tau) >= node.threshold)
                 get_k_nearest_unvisited_neighbor(*node.right, query, top_k, epsilon);
 
             relaxed_tau = top_k.farthest_distance() / (dist_t{1} + epsilon);
 
-            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
+            if(node.left != nullptr /*&& !node.left->skip*/ && (distance - relaxed_tau) <= node.threshold)
                 get_k_nearest_unvisited_neighbor(*node.left, query, top_k, epsilon);
         }
     }
@@ -477,22 +477,22 @@ namespace vptree
 
         if(distance < node.threshold)
         {
-            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
+            if(node.left != nullptr /*&& !node.left->skip*/ && (distance - relaxed_tau) <= node.threshold)
                 get_nearest_unvisited_neighbor(*node.left, query, result, epsilon);
 
             relaxed_tau = result.distance / (dist_t{1} + epsilon);
 
-            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
+            if(node.right != nullptr /*&& !node.right->skip*/ && (distance + relaxed_tau) >= node.threshold)
                 get_nearest_unvisited_neighbor(*node.right, query, result, epsilon);
         }
         else
         {
-            if(node.right != nullptr && !node.right->skip && (distance + relaxed_tau) >= node.threshold)
+            if(node.right != nullptr /*&& !node.right->skip*/ && (distance + relaxed_tau) >= node.threshold)
                 get_nearest_unvisited_neighbor(*node.right, query, result, epsilon);
 
             relaxed_tau = result.distance / (dist_t{1} + epsilon);
 
-            if(node.left != nullptr && !node.left->skip && (distance - relaxed_tau) <= node.threshold)
+            if(node.left != nullptr /*&& !node.left->skip*/ && (distance - relaxed_tau) <= node.threshold)
                 get_nearest_unvisited_neighbor(*node.left, query, result, epsilon);
         }
     }
@@ -699,7 +699,7 @@ namespace vptree
         remaining_vertices_position[remaining_vertices.back()] = remaining_vertices_position[vertex];
         remaining_vertices.pop_back();
 
-        VPTreeNode* node = &nodes[vertex];
+        /*VPTreeNode* node = &nodes[vertex];
         while(node != nullptr)
         {
             node->skip = (node->left == nullptr || node->left->skip) && (node->right == nullptr || node->right->skip) && already_added_vertices[node->pivot];
@@ -709,7 +709,7 @@ namespace vptree
                 return;
 
             node = node->parent;
-        }
+        }*/
     }
 
     template <typename T, typename dist_t>
