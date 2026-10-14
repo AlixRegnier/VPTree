@@ -636,6 +636,7 @@ namespace vptree
     inline void VPTree<T, dist_t>::set_all_vertices_as_unvisited()
     {
         const std::size_t n = size();
+        remaining_vertices.resize(n);
 
         for(std::size_t i = 0; i < n; i++)
         {
